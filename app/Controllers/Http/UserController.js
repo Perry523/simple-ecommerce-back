@@ -40,15 +40,9 @@ class UserController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  static get traits () {
-    return [
-      '@provider:Adonis/Acl/HasRole',
-      '@provider:Adonis/Acl/HasPermission'
-    ]
-  }
   async store ({ request, response }) {
     const {username, password, email} = request.all()
-    const user = User.create({username,password,email,isAdmin:false})      
+    const user = User.create({username,password,email,isAdmin:false})
     return user
   }
   /**

@@ -1,9 +1,9 @@
-'use strict'
+"use strict";
 
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
-const Brand = use('App/models/Brand')
+const Brand = use("App/models/Brand");
 /**
  * Resourceful controller for interacting with brands
  */
@@ -17,9 +17,9 @@ class BrandController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index ({ request, response, view }) {
-    const brands = await Brand.all()
-    return brands
+  async index({ request, response, view }) {
+    const brands = await Brand.all();
+    return brands;
   }
 
   /**
@@ -31,8 +31,7 @@ class BrandController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async create ({ request, response, view }) {
-  }
+  async create({ request, response, view }) {}
 
   /**
    * Create/save a new brand.
@@ -42,9 +41,9 @@ class BrandController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store ({ request, response }) {
-    const brand = Brand.create(await request.only('brand'))
-    return brand
+  async store({ request, response }) {
+    const brand = Brand.create(await request.only("name"));
+    return brand;
   }
 
   /**
@@ -56,8 +55,7 @@ class BrandController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show ({ params, request, response, view }) {
-  }
+  async show({ params, request, response, view }) {}
 
   /**
    * Render a form to update an existing brand.
@@ -68,8 +66,7 @@ class BrandController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async edit ({ params, request, response, view }) {
-  }
+  async edit({ params, request, response, view }) {}
 
   /**
    * Update brand details.
@@ -79,7 +76,11 @@ class BrandController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update ({ params, request, response }) {
+  async update({ params, request, response }) {
+    const newBrandName = await request.only('name');
+    const brand = await Brand.find(params.id);
+    brand.name = newBrandName.name;
+    return await brand.save()
   }
 
   /**
@@ -90,8 +91,10 @@ class BrandController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy ({ params, request, response }) {
+  async destroy({ params, request, response }) {
+    const brand = await Brand.find(params.id)
+    return await brand.delete()
   }
 }
 
-module.exports = BrandController
+module.exports = BrandController;

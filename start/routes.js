@@ -15,14 +15,13 @@
 
 /** @type {typeof import('@adonisjs/framework/src/Route/Manager')} */
 const Route = use('Route')
-
-Route.resource('/produtos','ProductController')
-Route.resource('/brands','BrandController')
-Route.resource('/categories','CategoryController')
+Route.resource('/products', 'ProductController')
+Route.resource('/brands', 'BrandController')
+Route.resource('/categories', 'CategoryController')
 Route.get('images/:path', 'ImageController.show')
 Route.post('/login', 'AuthController.store')
 Route.get('variantImgs/:path', 'VariantController.show')
 Route.post('/register', 'UserController.store')
 Route.get('/home', 'UserController.show').middleware('auth')
 Route.get('/admin', 'UserController.isAdmin').middleware('auth')
-Route.post('/filterCategory','ProductController.filter')
+Route.post('/filterCategory', 'ProductController.filter')

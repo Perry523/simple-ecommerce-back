@@ -1,15 +1,13 @@
-'use strict'
-const Product =  use('App/Models/Product')
-const Variant =  use('App/Models/Variant')
-const Image =  use('App/Models/Image')
-const Drive = use('Drive')
-const Helpers = use('Helpers')
-
+"use strict";
+const Product = use("App/Models/Product");
+const Variant = use("App/Models/Variant");
+const Image = use("App/Models/Image");
+const Drive = use("Drive");
+const Helpers = use("Helpers");
 
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
-
 
 /**
  * Resourceful controller for interacting with products
@@ -24,40 +22,42 @@ class ProductController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-   
-  async index ({ request, response, view }) {
-    const products = await Product.all()
-    const produtos = []
-    for(let i in products.rows){
-      let produto = {}
-      produto.nome = products.rows[i].name 
-      let imgs = await Image.query().where('product_name','=',produto.nome).fetch()
-      let variants = await Variant.query().where('product_name','=',produto.nome).fetch()
-      produto.marca = products.rows[i].brand
-      produto.preco = products.rows[i].price
-      produto.info = products.rows[i].info
-      produto.desconto = products.rows[i].discount
-      produto.tipo = products.rows[i].type
-      produto.imgs = []
-      produto.variants = []
-      for(let j in imgs.rows){
-        produto.imgs.push(imgs.rows[j].path)
+
+  async index({ request, response, view }) {
+    const products = await Product.all();
+    const produtos = [];
+    for (let i in products.rows) {
+      const produto = {};
+      produto.id = products.rows[i].id;
+      const imgs = await Image.query()
+        .where("product_id", "=", produto.id)
+        .fetch();
+      const variants = await Variant.query()
+        .where("product_id", "=", produto.id)
+        .fetch();
+      produto.name = products.rows[i].name;
+      produto.brand = products.rows[i].brand;
+      produto.price = products.rows[i].price;
+      produto.info = products.rows[i].info;
+      produto.link = products.rows[i].link;
+      produto.discount = products.rows[i].discount;
+      produto.type = products.rows[i].category;
+      produto.imgs = [];
+      produto.variants = [];
+      for (let j in imgs.rows) {
+        produto.imgs.push(imgs.rows[j].path);
       }
-      for(let j in variants.rows){
-        produto.variants.push(variants.rows[j])
+      for (let j in variants.rows) {
+        produto.variants.push(variants.rows[j]);
       }
-      produtos.push(produto)
+      produtos.push(produto);
     }
-    return produtos
-    
+    return produtos;
   }
 
-
-
-
-    /*await setTimeout(() => {
+  /*await setTimeout(() => {
       }
-      
+
     }, 2000);*/
 
   /**
@@ -69,8 +69,7 @@ class ProductController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async create ({ request, response, view }) {
-  }
+  async create({ request, response, view }) {}
 
   /**
    * Create/save a new product.
@@ -80,68 +79,81 @@ class ProductController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store ({ request, response }) {
-    let product = request.only(['name','type','brand','discount','price','info'])
+  async store({ request, response }) {
+    const product = request.only([
+      "name",
+      "type",
+      "brand",
+      "discount",
+      "price",
+      "info",
+      "link",
+    ]);
     //const produto = Product.create(product)
-    const prod = new Product()
-    prod.name = product.name
-    prod.category = product.type
-    prod.brand = product.brand
-    prod.discount = product.discount
-    prod.price = product.price
-    prod.info = product.info
-    prod.save()
-    let rawvariants = request.only('variants')
-    let variantImgs = request.file('variantImgs')
-    for(let i in rawvariants.variants){
-      const variant = JSON.parse(rawvariants.variants[i])
-      const variante = new Variant
-      variante.product_name = product.name
-      variante.stock = variant.estoque
-      variante.variant = variant.cor
-      if (variantImgs !== null){
-        if(variantImgs.files[i] !== undefined){
-          const variantImgName = `${new Date().getTime()}.${variantImgs.files[i].subtype}`
-          variante.path = '/variantImgs/'+variantImgName
-          await variantImgs.files[i].move(Helpers.tmpPath('uploads/variantImgs'), {
-            name: variantImgName,
-          })
-          if (!variantImgs.files[i].moved()) {
-            return variantImgs.files[i].error()
-          }
-          variante.save()
-        }
-        else{
-          variante.path = null
-          variante.save()
-        } 
-      }
-      else{
-        variante.path = null
-        variante.save()
-      } 
-    }   
-      let file = request.file('imgs')
-        if (file){
-          for(let i in file.files){
-            let productImgName = `${new Date().getTime()}${file.files[i].clientName}`
-            await file.files[i].move(Helpers.tmpPath('uploads/ProductImgs'), {
-              name: productImgName,
-            })
-            if (!file.files[i].moved()) {
-              return file.files[i].error()
+    const prod = new Product();
+    prod.name = product.name;
+    prod.category = product.type;
+    prod.brand = product.brand;
+    prod.discount = product.discount;
+    prod.price = product.price;
+    prod.info = product.info;
+    prod.link = product.link;
+    await prod.save();
+    let rawvariants = request.only("variants");
+    let variantImgs = request.file("variantImgs");
+    for (let i in rawvariants.variants) {
+      const variant = JSON.parse(rawvariants.variants[i]);
+      const variante = new Variant();
+      variante.product_id = prod.id;
+      variante.stock = variant.stock;
+      variante.variant = variant.name;
+      if (variantImgs !== null) {
+        if (variantImgs.files[i] !== undefined) {
+          const variantImgName = `${new Date().getTime()}.${
+            variantImgs.files[i].subtype
+          }`;
+          variante.path = "/variantImgs/" + variantImgName;
+          await variantImgs.files[i].move(
+            Helpers.tmpPath("uploads/variantImgs"),
+            {
+              name: variantImgName,
             }
-            const img = new Image()
-            img.product_name = product.name
-            img.path = '/images/'+productImgName
-            img.save()
+          );
+          if (!variantImgs.files[i].moved()) {
+            return variantImgs.files[i].error();
           }
+          variante.save();
+        } else {
+          variante.path = null;
+          variante.save();
         }
-        else{
-          return "O campo de imagem é obrigatório"
-        }
-      return 'success'
+      } else {
+        variante.path = null;
+        variante.save();
+      }
     }
+    let file = request.file("imgs");
+    if (file) {
+      for (let i in file.files) {
+        let productImgName = `${new Date().getTime()}${
+          file.files[i].clientName
+        }`;
+        await file.files[i].move(Helpers.tmpPath("uploads/ProductImgs"), {
+          name: productImgName,
+        });
+        if (!file.files[i].moved()) {
+          return file.files[i].error();
+        }
+        const img = new Image();
+        img.product_id = prod.id;
+        img.path = "/images/" + productImgName;
+        img.save();
+      }
+    } else {
+      throw new Error("O campo de imagem é obrigatório");
+    }
+    return "success";
+  }
 
   /**
    * Display a single product.
@@ -152,22 +164,25 @@ class ProductController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show ({ params, request, response, view }) {
-    let produto = {}
-    const id = params.id.replace(/_/g,' ')
-    let product = await Product.query().where('name','=',id).fetch()
-    produto.nome = product.rows[0].name
-    produto.marca = product.rows[0].brand
-    produto.preco = product.rows[0].price
-    produto.info = product.rows[0].info
-    produto.desconto = product.rows[0].discount
-    produto.tipo = product.rows[0].category
-    let imgs = await Image.query().where('product_name','=',id).fetch()
-    produto.imgs = imgs.rows.map(img => {return img.path})
-    produto.variants = await Variant.query().where('product_name','=',id).fetch()
-    return produto
+  async show({ params, request, response, view }) {
+    let produto = {};
+    const id = params.id;
+    let product = await Product.query().where("link", "=", id).fetch();
+    produto.nome = product.rows[0].name;
+    produto.marca = product.rows[0].brand;
+    produto.preco = product.rows[0].price;
+    produto.info = product.rows[0].info;
+    produto.desconto = product.rows[0].discount;
+    produto.tipo = product.rows[0].category;
+    let imgs = await Image.query().where("product_name", "=", id).fetch();
+    produto.imgs = imgs.rows.map((img) => {
+      return img.path;
+    });
+    produto.variants = await Variant.query()
+      .where("product_name", "=", id)
+      .fetch();
+    return produto;
   }
-
 
   /**
    * Render a form to update an existing product.
@@ -178,8 +193,7 @@ class ProductController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async edit ({ params, request, response, view }) {
-  }
+  async edit({ params, request, response, view }) {}
 
   /**
    * Update product details.
@@ -189,8 +203,7 @@ class ProductController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update ({ params, request, response }) {
-  }
+  async update({ params, request, response }) {}
 
   /**
    * Delete a product with id.
@@ -200,33 +213,43 @@ class ProductController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy ({ params, request, response }) {
+  async destroy({ params, request, response }) {
+    const product = await Product.find(params.id);
+    await Image.query().where("product_id", "=", product.id).delete();
+    await Variant.query().where("product_id", "=", product.id).delete();
+    return await product.delete();
   }
-  async filter({params, request, response}){
-    const products = await Product.query().where('category','=',request.only('category').category).fetch()
-    const produtos = []
-    for(let i in products.rows){
-      let produto = {}
-      produto.nome = products.rows[i].name 
-      let imgs = await Image.query().where('product_name','=',produto.nome).fetch()
-      let variants = await Variant.query().where('product_name','=',produto.nome).fetch()
-      produto.marca = products.rows[i].brand
-      produto.preco = products.rows[i].price
-      produto.info = products.rows[i].info
-      produto.desconto = products.rows[i].discount
-      produto.tipo = products.rows[i].type
-      produto.imgs = []
-      produto.variants = []
-      for(let j in imgs.rows){
-        produto.imgs.push(imgs.rows[j].path)
+  async filter({ params, request, response }) {
+    const products = await Product.query()
+      .where("category", "=", request.only("category").category)
+      .fetch();
+    const produtos = [];
+    for (let i in products.rows) {
+      let produto = {};
+      produto.id = products.rows[i].id;
+      let imgs = await Image.query()
+        .where("product_id", "=", produto.id)
+        .fetch();
+      let variants = await Variant.query()
+        .where("product_id", "=", produto.id)
+        .fetch();
+      produto.marca = products.rows[i].brand;
+      produto.preco = products.rows[i].price;
+      produto.info = products.rows[i].info;
+      produto.desconto = products.rows[i].discount;
+      produto.tipo = products.rows[i].type;
+      produto.imgs = [];
+      produto.variants = [];
+      for (let j in imgs.rows) {
+        produto.imgs.push(imgs.rows[j].path);
       }
-      for(let j in variants.rows){
-        produto.variants.push(variants.rows[j])
+      for (let j in variants.rows) {
+        produto.variants.push(variants.rows[j]);
       }
-      produtos.push(produto)
+      produtos.push(produto);
     }
-    return produtos
+    return produtos;
   }
 }
 
-module.exports = ProductController
+module.exports = ProductController;

@@ -6,7 +6,8 @@ const Schema = use('Schema')
 class BrandsSchema extends Schema {
   up () {
     this.create('brands', (table) => {
-      table.string('brand').notNullable().unique()
+      table.increments()
+      table.string('name').notNullable().unique()
       table.timestamps()
 
     })

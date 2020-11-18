@@ -1,9 +1,9 @@
-'use strict'
+"use strict";
 
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
-const Category = use('App/Models/Category')
+const Category = use("App/Models/Category");
 /**
  * Resourceful controller for interacting with categories
  */
@@ -17,9 +17,9 @@ class CategoryController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index ({ request, response, view }) {
-    const categories = await Category.all()
-    return categories
+  async index({ request, response, view }) {
+    const categories = await Category.all();
+    return categories;
   }
 
   /**
@@ -31,8 +31,7 @@ class CategoryController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async create ({ request, response, view }) {
-  }
+  async create({ request, response, view }) {}
 
   /**
    * Create/save a new category.
@@ -42,9 +41,9 @@ class CategoryController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store ({ request, response }) {
-    const category = Category.create(await request.only('category'))
-    return category
+  async store({ request, response }) {
+    const category = Category.create(await request.all());
+    return category;
   }
 
   /**
@@ -56,8 +55,7 @@ class CategoryController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show ({ params, request, response, view }) {
-  }
+  async show({ params, request, response, view }) {}
 
   /**
    * Render a form to update an existing category.
@@ -68,8 +66,7 @@ class CategoryController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async edit ({ params, request, response, view }) {
-  }
+  async edit({ params, request, response, view }) {}
 
   /**
    * Update category details.
@@ -79,7 +76,12 @@ class CategoryController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update ({ params, request, response }) {
+  async update({ params, request, response }) {
+    const { name, icon } = await request.only(["name", "icon"]);
+    const category = await Category.find(params.id);
+    category.name = name
+    category.icon = icon
+    return await category.save();
   }
 
   /**
@@ -90,8 +92,10 @@ class CategoryController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy ({ params, request, response }) {
+  async destroy({ params, request, response }) {
+    const category = await Category.find(params.id);
+    return await category.delete();
   }
 }
 
-module.exports = CategoryController
+module.exports = CategoryController;
