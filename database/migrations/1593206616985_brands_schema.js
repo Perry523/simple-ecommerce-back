@@ -9,7 +9,6 @@ class BrandsSchema extends Schema {
       table.increments()
       table.string('name').notNullable().unique()
       table.timestamps()
-
     })
   }
 

@@ -8,7 +8,7 @@ class CreateVariantsSchema extends Schema {
     this.create('variants', (table) => {
       table.string('path')
       table.integer('product_id').unsigned().references('id').inTable('products')
-      table.string('variant').notNullable()
+      table.string('name').notNullable()
       table.integer('stock')
       table.timestamps()
     })

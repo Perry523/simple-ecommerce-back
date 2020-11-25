@@ -2,7 +2,6 @@
 const Product = use("App/Models/Product");
 const Variant = use("App/Models/Variant");
 const Image = use("App/Models/Image");
-const Drive = use("Drive");
 const Helpers = use("Helpers");
 
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
@@ -27,21 +26,13 @@ class ProductController {
     const products = await Product.all();
     const produtos = [];
     for (let i in products.rows) {
-      const produto = {};
-      produto.id = products.rows[i].id;
+      const produto = Object.assign(products.rows[i]);
       const imgs = await Image.query()
         .where("product_id", "=", produto.id)
         .fetch();
       const variants = await Variant.query()
         .where("product_id", "=", produto.id)
         .fetch();
-      produto.name = products.rows[i].name;
-      produto.brand = products.rows[i].brand;
-      produto.price = products.rows[i].price;
-      produto.info = products.rows[i].info;
-      produto.link = products.rows[i].link;
-      produto.discount = products.rows[i].discount;
-      produto.type = products.rows[i].category;
       produto.imgs = [];
       produto.variants = [];
       for (let j in imgs.rows) {
@@ -82,31 +73,23 @@ class ProductController {
   async store({ request, response }) {
     const product = request.only([
       "name",
-      "type",
+      "category",
       "brand",
       "discount",
       "price",
       "info",
       "link",
     ]);
-    //const produto = Product.create(product)
-    const prod = new Product();
-    prod.name = product.name;
-    prod.category = product.type;
-    prod.brand = product.brand;
-    prod.discount = product.discount;
-    prod.price = product.price;
-    prod.info = product.info;
-    prod.link = product.link;
+    let prod = new Product();
+    prod = Object.assign(prod, product);
     await prod.save();
-    let rawvariants = request.only("variants");
+    let { variants } = request.only("variants");
     let variantImgs = request.file("variantImgs");
-    for (let i in rawvariants.variants) {
-      const variant = JSON.parse(rawvariants.variants[i]);
-      const variante = new Variant();
+    for (let i in variants) {
+      let variant = JSON.parse(variants[i]);
+      let variante = new Variant();
       variante.product_id = prod.id;
-      variante.stock = variant.stock;
-      variante.variant = variant.name;
+      variante = Object.assign(variante, variant);
       if (variantImgs !== null) {
         if (variantImgs.files[i] !== undefined) {
           const variantImgName = `${new Date().getTime()}.${
@@ -132,17 +115,20 @@ class ProductController {
         variante.save();
       }
     }
-    let file = request.file("imgs");
-    if (file) {
-      for (let i in file.files) {
+    let productImgs = request.file("imgs");
+    if (productImgs) {
+      for (let i in productImgs.files) {
         let productImgName = `${new Date().getTime()}${
-          file.files[i].clientName
+          productImgs.files[i].clientName
         }`;
-        await file.files[i].move(Helpers.tmpPath("uploads/ProductImgs"), {
-          name: productImgName,
-        });
-        if (!file.files[i].moved()) {
-          return file.files[i].error();
+        await productImgs.files[i].move(
+          Helpers.tmpPath("uploads/ProductImgs"),
+          {
+            name: productImgName,
+          }
+        );
+        if (!productImgs.files[i].moved()) {
+          return productImgs.files[i].error();
         }
         const img = new Image();
         img.product_id = prod.id;
@@ -165,21 +151,15 @@ class ProductController {
    * @param {View} ctx.view
    */
   async show({ params, request, response, view }) {
-    let produto = {};
     const id = params.id;
     let product = await Product.query().where("link", "=", id).fetch();
-    produto.nome = product.rows[0].name;
-    produto.marca = product.rows[0].brand;
-    produto.preco = product.rows[0].price;
-    produto.info = product.rows[0].info;
-    produto.desconto = product.rows[0].discount;
-    produto.tipo = product.rows[0].category;
-    let imgs = await Image.query().where("product_name", "=", id).fetch();
+    const produto = Object.assign(product.rows[0]);
+    let imgs = await Image.query().where("product_id", "=", produto.id).fetch();
     produto.imgs = imgs.rows.map((img) => {
       return img.path;
     });
     produto.variants = await Variant.query()
-      .where("product_name", "=", id)
+      .where("product_id", "=", produto.id)
       .fetch();
     return produto;
   }
@@ -219,25 +199,49 @@ class ProductController {
     await Variant.query().where("product_id", "=", product.id).delete();
     return await product.delete();
   }
-  async filter({ params, request, response }) {
+  async filterByCategory({ params, request, response }) {
+    const { category } = request.only("category");
     const products = await Product.query()
-      .where("category", "=", request.only("category").category)
+      .where("category", "=", category)
       .fetch();
     const produtos = [];
     for (let i in products.rows) {
-      let produto = {};
-      produto.id = products.rows[i].id;
+      const produto = Object.assign({}, products.rows[i].$attributes);
       let imgs = await Image.query()
         .where("product_id", "=", produto.id)
         .fetch();
       let variants = await Variant.query()
         .where("product_id", "=", produto.id)
         .fetch();
-      produto.marca = products.rows[i].brand;
-      produto.preco = products.rows[i].price;
-      produto.info = products.rows[i].info;
-      produto.desconto = products.rows[i].discount;
-      produto.tipo = products.rows[i].type;
+      produto.imgs = [];
+      produto.variants = [];
+      for (let j in imgs.rows) {
+        produto.imgs.push(imgs.rows[j].path);
+      }
+      for (let j in variants.rows) {
+        produto.variants.push(variants.rows[j]);
+      }
+      produtos.push(produto);
+    }
+    return produtos;
+  }
+  async filter({ params, request, response }) {
+    const { name, brand, min, max, category } = request.all();
+    const products = await Product.query()
+      .whereBetween("price", [min || 0, max || 9999999])
+      .andWhere("category", "=", category)
+      .andWhere("name", "like", name ? "%" + name + "%" : "%")
+      .andWhere("brand", "like", brand ? "%" + brand + "%" : "%")
+      .fetch();
+    const produtos = [];
+    for (let i in products.rows) {
+      const produto = Object.assign({}, products.rows[i].$attributes);
+      let imgs = await Image.query()
+        .where("product_id", "=", produto.id)
+        .fetch();
+      let variants = await Variant.query()
+        .where("product_id", "=", produto.id)
+        .fetch();
       produto.imgs = [];
       produto.variants = [];
       for (let j in imgs.rows) {
