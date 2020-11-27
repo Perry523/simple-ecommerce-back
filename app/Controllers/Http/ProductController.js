@@ -12,16 +12,6 @@ const Helpers = use("Helpers");
  * Resourceful controller for interacting with products
  */
 class ProductController {
-  /**
-   * Show a list of all products.
-   * GET products
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-
   async index({ request, response, view }) {
     const products = await Product.all();
     const produtos = [];
@@ -46,30 +36,6 @@ class ProductController {
     return produtos;
   }
 
-  /*await setTimeout(() => {
-      }
-
-    }, 2000);*/
-
-  /**
-   * Render a form to be used for creating a new product.
-   * GET products/create
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async create({ request, response, view }) {}
-
-  /**
-   * Create/save a new product.
-   * POST products
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
   async store({ request, response }) {
     const product = request.only([
       "name",
@@ -141,15 +107,6 @@ class ProductController {
     return "success";
   }
 
-  /**
-   * Display a single product.
-   * GET products/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
   async show({ params, request, response, view }) {
     const id = params.id;
     let product = await Product.query().where("link", "=", id).fetch();
@@ -164,35 +121,6 @@ class ProductController {
     return produto;
   }
 
-  /**
-   * Render a form to update an existing product.
-   * GET products/:id/edit
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async edit({ params, request, response, view }) {}
-
-  /**
-   * Update product details.
-   * PUT or PATCH products/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
-  async update({ params, request, response }) {}
-
-  /**
-   * Delete a product with id.
-   * DELETE products/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
   async destroy({ params, request, response }) {
     const product = await Product.find(params.id);
     await Image.query().where("product_id", "=", product.id).delete();
