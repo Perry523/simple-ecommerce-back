@@ -7,6 +7,7 @@ class SoldProductSchema extends Schema {
   up () {
     this.create('sold_products', (table) => {
       table.increments()
+      table.integer('order_id').unsigned().references('id').inTable('orders')
       table.integer('product_id').unsigned().references('id').inTable('products')
       table.string('variant')
       table.integer('quantity')

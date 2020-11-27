@@ -27,3 +27,4 @@ Route.get("/admin", "UserController.isAdmin").middleware("auth");
 Route.post("/filterCategory", "ProductController.filterByCategory");
 Route.post("/filter", "ProductController.filter");
 Route.resource("/endereco", "EnderecoController").middleware("auth");
+Route.resource("/pedido", "OrderController").middleware("auth");
